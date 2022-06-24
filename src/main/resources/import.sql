@@ -1,0 +1,1 @@
+insert into book (id, title, price) values (1, 'Clean Code (Robert Martin, 2008)', 50);
