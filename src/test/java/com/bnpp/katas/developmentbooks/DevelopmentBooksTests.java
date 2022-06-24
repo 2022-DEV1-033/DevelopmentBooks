@@ -22,6 +22,7 @@ class DevelopmentBooksTests {
 	void loadBooks() {
 		List<Book> availableBooks = bookService.getAvailableBooks();
 		Assertions.assertNotNull(availableBooks);
+		Assertions.assertEquals(5, bookService.getAvailableBooks().size());
 	}
 
 }
