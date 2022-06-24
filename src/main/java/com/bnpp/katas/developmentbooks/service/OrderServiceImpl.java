@@ -1,11 +1,11 @@
 package com.bnpp.katas.developmentbooks.service;
 
 import com.bnpp.katas.developmentbooks.dto.BookItemDto;
+import com.bnpp.katas.developmentbooks.exception.BadInputException;
 import com.bnpp.katas.developmentbooks.exception.EmptyListDiscountCalculationException;
 import com.bnpp.katas.developmentbooks.model.Book;
 import com.bnpp.katas.developmentbooks.service.market.MarketRule;
 import com.bnpp.katas.developmentbooks.service.market.MarketRuleHandler;
-import com.bnpp.katas.developmentbooks.util.BookItemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -29,13 +29,21 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public BigDecimal calculatePrice(List<BookItemDto> items) {
+        validate(items);
+
+        List<Book> books = bookService.getByIds(items.stream().map(BookItemDto::getId).collect(Collectors.toSet()));
+        Map<Long, Integer> itemsMap = items.stream().collect(Collectors.toMap(BookItemDto::getId, BookItemDto::getQuantity));
+
+        return sumPrice(books, itemsMap).subtract(getDiscount(itemsMap, books));
+    }
+
+    private void validate(List<BookItemDto> items) {
         if(Objects.isNull(items) || items.isEmpty())
             throw new EmptyListDiscountCalculationException();
 
-        List<Book> books = bookService.getByIds(items.stream().map(BookItemDto::getId).collect(Collectors.toSet()));
-        Map<Long, Integer> itemsMap = BookItemUtil.toMap(items);
-
-        return sumPrice(books, itemsMap).subtract(getDiscount(itemsMap, books));
+        if(items.stream().anyMatch(item -> item.getQuantity() == 0) ||
+                items.stream().map(BookItemDto::getId).distinct().count() != items.size())
+            throw new BadInputException();
     }
 
     private BigDecimal sumPrice(List<Book> books, Map<Long, Integer> itemsMap){

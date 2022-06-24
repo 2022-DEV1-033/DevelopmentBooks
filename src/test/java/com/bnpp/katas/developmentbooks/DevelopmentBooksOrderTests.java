@@ -1,6 +1,7 @@
 package com.bnpp.katas.developmentbooks;
 
 import com.bnpp.katas.developmentbooks.dto.BookItemDto;
+import com.bnpp.katas.developmentbooks.exception.BadInputException;
 import com.bnpp.katas.developmentbooks.exception.BookNotFoundException;
 import com.bnpp.katas.developmentbooks.exception.EmptyListDiscountCalculationException;
 import com.bnpp.katas.developmentbooks.service.OrderService;
@@ -45,6 +46,29 @@ class DevelopmentBooksOrderTests {
 		);
 
 		Assertions.assertThrows(BookNotFoundException.class, () -> {
+			orderService.calculatePrice(items);
+		});
+	}
+
+	@Test
+	void assetZeroQuantity() {
+		List<BookItemDto> items = Arrays.asList(
+				new BookItemDto(3, 0)
+		);
+
+		Assertions.assertThrows(BadInputException.class, () -> {
+			orderService.calculatePrice(items);
+		});
+	}
+
+	@Test
+	void assetDuplicateId() {
+		List<BookItemDto> items = Arrays.asList(
+				new BookItemDto(3, 2),
+				new BookItemDto(3, 3)
+		);
+
+		Assertions.assertThrows(BadInputException.class, () -> {
 			orderService.calculatePrice(items);
 		});
 	}
