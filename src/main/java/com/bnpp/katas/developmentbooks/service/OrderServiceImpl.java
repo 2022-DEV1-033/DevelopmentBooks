@@ -5,6 +5,7 @@ import com.bnpp.katas.developmentbooks.exception.EmptyListDiscountCalculationExc
 import com.bnpp.katas.developmentbooks.model.Book;
 import com.bnpp.katas.developmentbooks.service.market.MarketRule;
 import com.bnpp.katas.developmentbooks.service.market.MarketRuleHandler;
+import com.bnpp.katas.developmentbooks.util.BookItemUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -32,9 +33,9 @@ public class OrderServiceImpl implements OrderService{
             throw new EmptyListDiscountCalculationException();
 
         List<Book> books = bookService.getByIds(items.stream().map(BookItemDto::getId).collect(Collectors.toSet()));
-        Map<Long, Integer> itemsMap = items.stream().collect(Collectors.toMap(BookItemDto::getId, BookItemDto::getQuantity));
+        Map<Long, Integer> itemsMap = BookItemUtil.toMap(items);
 
-        return sumPrice(books, itemsMap).subtract(getDiscount(items));
+        return sumPrice(books, itemsMap).subtract(getDiscount(itemsMap, books));
     }
 
     private BigDecimal sumPrice(List<Book> books, Map<Long, Integer> itemsMap){
@@ -42,14 +43,14 @@ public class OrderServiceImpl implements OrderService{
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal getDiscount(List<BookItemDto> items) {
+    private BigDecimal getDiscount(Map<Long, Integer> itemsMap, List<Book> books) {
         MarketRule marketRule = marketRuleHandler.handle();
 
         if(Objects.isNull(marketRule)){
             log.info("No Handler founded.");
             return BigDecimal.ZERO;
         }else{
-            return marketRule.calculateDiscount(items);
+            return marketRule.calculateDiscount(itemsMap, books);
         }
     }
 }

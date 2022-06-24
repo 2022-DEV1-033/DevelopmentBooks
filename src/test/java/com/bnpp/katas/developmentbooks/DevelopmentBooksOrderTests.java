@@ -5,6 +5,7 @@ import com.bnpp.katas.developmentbooks.exception.BookNotFoundException;
 import com.bnpp.katas.developmentbooks.exception.EmptyListDiscountCalculationException;
 import com.bnpp.katas.developmentbooks.service.OrderService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +50,36 @@ class DevelopmentBooksOrderTests {
 	}
 
 	@Test
-	void calculatePrice() {
+	void calculatePriceWithoutDiscount() {
+		List<BookItemDto> items = Arrays.asList(new BookItemDto(1, 5));
+
+		Assertions.assertEquals(new BigDecimal("250.00"), orderService.calculatePrice(items));
+	}
+
+	@Test
+	void calculatePriceOfMultiPack() {
 		List<BookItemDto> items = Arrays.asList(
 				new BookItemDto(1, 5),
-				new BookItemDto(2, 1)
-				);
+				new BookItemDto(2, 3),
+				new BookItemDto(3, 2),
+				new BookItemDto(4, 4),
+				new BookItemDto(5, 1)
+		);
 
-		Assertions.assertEquals(new BigDecimal("300.00"), orderService.calculatePrice(items));
+		Assertions.assertEquals(new BigDecimal("627.50"), orderService.calculatePrice(items));
+	}
+
+	@Test
+	@Disabled("Disabled until get answer from client!")
+	void calculatePriceOfDuplicateMultiPack() {
+		List<BookItemDto> items = Arrays.asList(
+				new BookItemDto(1, 2),
+				new BookItemDto(2, 2),
+				new BookItemDto(4, 2),
+				new BookItemDto(3, 1),
+				new BookItemDto(5, 1)
+		);
+
+		Assertions.assertEquals(new BigDecimal("320.00"), orderService.calculatePrice(items));
 	}
 }
