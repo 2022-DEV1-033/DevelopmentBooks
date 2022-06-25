@@ -90,11 +90,11 @@ class DevelopmentBooksOrderTests {
 				new BookItemDto(5, 1)
 		);
 
-		Assertions.assertEquals(new BigDecimal("627.50"), orderService.calculatePrice(items));
+		Assertions.assertEquals(new BigDecimal("625.00"), orderService.calculatePrice(items));
 	}
 
 	@Test
-	@Disabled("Disabled until get answer from client!")
+//	@Disabled("Disabled until get answer from client!")
 	void calculatePriceOfDuplicateMultiPack() {
 		List<BookItemDto> items = Arrays.asList(
 				new BookItemDto(1, 2),

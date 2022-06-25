@@ -15,29 +15,26 @@ public class BNPPMarketRule implements MarketRule{
     @Value("#{${app.market.bnpp.discounts}}")
     private HashMap<Integer,Integer> bnppDiscounts;
 
-    private List<BigDecimal> discounts = new ArrayList<>();
-
     @Override
     public BigDecimal calculateDiscount(Map<Long, Integer> itemsMap, List<Book> books) {
-        Integer maxPackSize = bnppDiscounts.entrySet().stream().map(Map.Entry::getKey).max(Integer::compareTo).get();
         Map<Long, Book> booksMap = books.stream().collect(Collectors.toMap(Book::getId, book -> book));
+        List<BigDecimal> discounts = new ArrayList<>();
 
-        calculateAllPackDiscounts(itemsMap, maxPackSize, booksMap);
+        bnppDiscounts.entrySet().stream().map(Map.Entry::getKey).sorted(Comparator.reverseOrder()).collect(Collectors.toList())
+                .forEach(maxPackSize -> {
+                    discounts.add(calculateAllPackDiscounts(itemsMap, maxPackSize, booksMap));
+        });
 
-        return getMaxDiscount();
+        return discounts.stream().max(BigDecimal::compareTo).get();
     }
 
-    private void calculateAllPackDiscounts(Map<Long, Integer> itemsMap, Integer maxPackSize, Map<Long, Book> booksMap) {
+    private BigDecimal calculateAllPackDiscounts(Map<Long, Integer> itemsMap, Integer maxPackSize, Map<Long, Book> booksMap) {
         BigDecimal packingDiscount = BigDecimal.ZERO;
         Map<Long, Integer> itemsMapToCalculate = cloneItems(itemsMap);
         while (itemsMapToCalculate.size() > 0) {
             packingDiscount = packingDiscount.add(calculateSinglePackDiscount(itemsMapToCalculate, maxPackSize, booksMap));
         }
-        discounts.add(packingDiscount);
-    }
-
-    private BigDecimal getMaxDiscount(){
-        return discounts.stream().max(BigDecimal::compareTo).get();
+        return packingDiscount;
     }
 
     private BigDecimal calculateSinglePackDiscount(Map<Long, Integer> itemsMapToCalculate, Integer maxPackSize, Map<Long, Book> booksMap) {
