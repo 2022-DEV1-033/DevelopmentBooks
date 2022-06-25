@@ -1,6 +1,7 @@
 package com.bnpp.katas.developmentbooks.service;
 
 import com.bnpp.katas.developmentbooks.dto.BookItemDto;
+import com.bnpp.katas.developmentbooks.dto.PriceResponseDto;
 import com.bnpp.katas.developmentbooks.exception.BadInputException;
 import com.bnpp.katas.developmentbooks.exception.EmptyListDiscountCalculationException;
 import com.bnpp.katas.developmentbooks.model.Book;
@@ -25,6 +26,11 @@ public class OrderServiceImpl implements OrderService{
     public OrderServiceImpl(MarketRuleHandler marketRuleHandler, BookService bookService) {
         this.marketRuleHandler = marketRuleHandler;
         this.bookService = bookService;
+    }
+
+    @Override
+    public PriceResponseDto checkPrice(List<BookItemDto> items) {
+        return new PriceResponseDto(calculatePrice(items));
     }
 
     @Override
