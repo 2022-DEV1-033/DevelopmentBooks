@@ -24,3 +24,6 @@ then chose one of these methods:
 
 ### API guide
 
+you can access to swagger by this url:
+
+        http://localhost:8080/swagger-ui/index.html
