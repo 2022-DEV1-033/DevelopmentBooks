@@ -6,10 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -18,22 +15,32 @@ public class BNPPMarketRule implements MarketRule{
     @Value("#{${app.market.bnpp.discounts}}")
     private HashMap<Integer,Integer> bnppDiscounts;
 
-    private BigDecimal discount = BigDecimal.ZERO;
+    private List<BigDecimal> discounts = new ArrayList<>();
 
     @Override
     public BigDecimal calculateDiscount(Map<Long, Integer> itemsMap, List<Book> books) {
-        Map<Long, Integer> itemsMapToCalculate = cloneItems(itemsMap);
         Integer maxPackSize = bnppDiscounts.entrySet().stream().map(Map.Entry::getKey).max(Integer::compareTo).get();
         Map<Long, Book> booksMap = books.stream().collect(Collectors.toMap(Book::getId, book -> book));
 
-        while (itemsMapToCalculate.size() > 0) {
-            createPack(itemsMapToCalculate, maxPackSize, booksMap);
-        }
+        calculateAllPackDiscounts(itemsMap, maxPackSize, booksMap);
 
-        return discount;
+        return getMaxDiscount();
     }
 
-    private BigDecimal createPack(Map<Long, Integer> itemsMapToCalculate, Integer maxPackSize, Map<Long, Book> booksMap) {
+    private void calculateAllPackDiscounts(Map<Long, Integer> itemsMap, Integer maxPackSize, Map<Long, Book> booksMap) {
+        BigDecimal packingDiscount = BigDecimal.ZERO;
+        Map<Long, Integer> itemsMapToCalculate = cloneItems(itemsMap);
+        while (itemsMapToCalculate.size() > 0) {
+            packingDiscount = packingDiscount.add(calculateSinglePackDiscount(itemsMapToCalculate, maxPackSize, booksMap));
+        }
+        discounts.add(packingDiscount);
+    }
+
+    private BigDecimal getMaxDiscount(){
+        return discounts.stream().max(BigDecimal::compareTo).get();
+    }
+
+    private BigDecimal calculateSinglePackDiscount(Map<Long, Integer> itemsMapToCalculate, Integer maxPackSize, Map<Long, Book> booksMap) {
         int packSize = 0;
         BigDecimal packPrice = BigDecimal.ZERO;
 
@@ -52,11 +59,11 @@ public class BNPPMarketRule implements MarketRule{
         }
 
         if(bnppDiscounts.containsKey(packSize)){
-            BigDecimal packDiscount = packPrice.multiply(new BigDecimal(bnppDiscounts.get(packSize)))
+            return packPrice.multiply(new BigDecimal(bnppDiscounts.get(packSize)))
                     .divide(new BigDecimal(100), 2, RoundingMode.FLOOR);
-            discount = discount.add(packDiscount);
         }
-        return discount;
+
+        return BigDecimal.ZERO;
     }
 
     private Map<Long, Integer> cloneItems(Map<Long, Integer> itemsMap) {
